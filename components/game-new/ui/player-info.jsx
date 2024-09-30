@@ -9,8 +9,9 @@ export function PlayerInfo({
   avatar,
   symbol,
   isTimerRunning,
-  seconds,
+  timer,
 }) {
+  const seconds = Math.ceil(timer / 1000);
   const minuteString = String(Math.floor(seconds / 60)).padStart(2, "0");
   const secondsString = String(seconds % 60).padStart(2, "0");
   const getTimerColor = () => {
