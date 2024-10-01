@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { PLAYERS } from "./constants";
 import {
   GAME_STATE_ACTIONS,
@@ -30,6 +30,13 @@ export function Game() {
     },
     initGameState,
   );
+
+  useInterval(1000, gameState.currentMoveStart, () => {
+    dispatch({
+      type: GAME_STATE_ACTIONS.TICK,
+      now: Date.now(),
+    });
+  });
 
   const winnerSequence = computeWinner(gameState.cells);
   const nextMove = getNextMove(gameState);
@@ -108,4 +115,21 @@ export function Game() {
       />
     </>
   );
+}
+
+export function useInterval(interval, enabled, cb) {
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const int = setInterval(() => {
+      cb(Date.now());
+    }, interval);
+
+    return () => {
+      clearInterval(int);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interval, enabled]);
 }
