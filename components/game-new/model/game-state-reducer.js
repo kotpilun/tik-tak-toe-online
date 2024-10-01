@@ -6,23 +6,18 @@ export const GAME_STATE_ACTIONS = {
 };
 
 export const gameStateReducer = (state, action) => {
-  console.log(action);
   switch (action.type) {
     case GAME_STATE_ACTIONS.CELL_CLICK: {
-      const { index } = action;
+      const { index, now } = action;
 
       if (state.cells[index]) return;
 
       return {
         ...state,
-        currentMove: getNextMove(
-          state.currentMove,
-          state.playersCount,
-          state.playersTimeOver,
-        ),
-        cells: state.cells.map((cell, i) =>
-          i === index ? state.currentMove : cell,
-        ),
+        timers: updateTimers(state, now),
+        currentMove: getNextMove(state),
+        currentMoveStart: now,
+        cells: updateCell(state, index),
       };
     }
 
@@ -32,9 +27,14 @@ export const gameStateReducer = (state, action) => {
   }
 };
 
-export const initGameState = ({ playersCount, defaultTImer }) => ({
+export const initGameState = ({
+  playersCount,
+  defaultTImer,
+  currentMoveStart,
+}) => ({
   cells: new Array(19 * 19).fill(null),
   currentMove: GAME_SYMBOLS.CROSS,
+  currentMoveStart,
   playersCount,
   timers: MOVE_ORDER.reduce((timers, symbol, index) => {
     if (index < playersCount) {
@@ -43,3 +43,18 @@ export const initGameState = ({ playersCount, defaultTImer }) => ({
     return timers;
   }, {}),
 });
+
+function updateTimers(gameState, now) {
+  const diff = now - gameState.currentMoveStart;
+  const timer = gameState.timers[gameState.currentMove];
+
+  return {
+    ...gameState.timers,
+    [gameState.currentMove]: timer - diff,
+  };
+}
+function updateCell(gameState, index) {
+  return gameState.cells.map((cell, i) =>
+    i === index ? gameState.currentMove : cell,
+  );
+}
