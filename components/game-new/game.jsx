@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { PLAYERS } from "./constants";
 import {
   GAME_STATE_ACTIONS,
@@ -25,26 +25,41 @@ export function Game() {
     gameStateReducer,
     {
       playersCount: PLAYERS_COUNT,
-      defaultTImer: 5000,
+      defaultTImer: 60000,
       currentMoveStart: Date.now(),
     },
     initGameState,
   );
 
-  useInterval(1000, gameState.currentMoveStart, () => {
-    dispatch({
-      type: GAME_STATE_ACTIONS.TICK,
-      now: Date.now(),
-    });
-  });
+  useInterval(
+    1000,
+    gameState.currentMoveStart,
+    useCallback(() => {
+      dispatch({
+        type: GAME_STATE_ACTIONS.TICK,
+        now: Date.now(),
+      });
+    }, []),
+  );
 
-  const winnerSequence = computeWinner(gameState.cells);
+  const winnerSequence = useMemo(
+    () => computeWinner(gameState.cells),
+    [gameState],
+  );
   const nextMove = getNextMove(gameState);
   const winnerSymbol = ComputeWinnerSymbol(gameState, {
     winnerSequence,
     nextMove,
   });
   const winnerPlayer = PLAYERS.find((player) => player.symbol === winnerSymbol);
+
+  const handleCellClick = useCallback((index) => {
+    dispatch({
+      type: GAME_STATE_ACTIONS.CELL_CLICK,
+      index,
+      now: Date.now(),
+    });
+  }, []);
 
   return (
     <>
@@ -86,15 +101,10 @@ export function Game() {
         gameCells={gameState.cells.map((cell, index) => (
           <GameCell
             key={index}
+            index={index}
             isWinner={winnerSequence?.includes(index)}
             disabled={!!winnerSymbol}
-            onClick={() => {
-              dispatch({
-                type: GAME_STATE_ACTIONS.CELL_CLICK,
-                index,
-                now: Date.now(),
-              });
-            }}
+            onClick={handleCellClick}
             symbol={cell}
           />
         ))}
@@ -124,12 +134,11 @@ export function useInterval(interval, enabled, cb) {
     }
 
     const int = setInterval(() => {
-      cb(Date.now());
+      cb();
     }, interval);
 
     return () => {
       clearInterval(int);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [interval, enabled]);
+  }, [interval, enabled, cb]);
 }

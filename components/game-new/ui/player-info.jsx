@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { GameSymbol } from "./game-symbol";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
 import { useNow } from "../../lib/timers";
 
 export function PlayerInfo({

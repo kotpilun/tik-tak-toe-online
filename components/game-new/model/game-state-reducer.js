@@ -77,6 +77,5 @@ function updateCell(gameState, index) {
 
 function isTimeOver(gameState, now) {
   const timer = updateTimers(gameState, now)[gameState.currentMove];
-  console.log(gameState);
   return timer <= 0;
 }
